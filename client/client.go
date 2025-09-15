@@ -2,14 +2,17 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"llm-gopher/client/oai"
 	"llm-gopher/client/vertex"
+	"llm-gopher/enums/clienttype"
 	"llm-gopher/params"
 )
 
 type Client struct {
 	OpenAIClient   ProviderClient
 	VertexAIClient ProviderClient
+	ClientType     clienttype.ClientType
 }
 
 type ClientConfig struct {
@@ -28,25 +31,25 @@ type ProviderClient interface {
 	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (string, error)
 }
 
-// TODO: make isVertexClient more general (an enum representing each client type)
-func NewClient(config ClientConfig, isVertexClient bool) (*Client, error) {
-	//nolint:exhaustruct
-	openAIClient := oai.NewOpenAIClient(oai.ClientConfig{
-		APIKey:  config.APIKey,
-		BaseURL: config.BaseURL,
-	})
-
+func NewClient(config ClientConfig, clientType clienttype.ClientType) (*Client, error) {
+	var openAIClient *oai.Client
 	var vertexAIClient *vertex.Client
-	if isVertexClient {
-		vc, err := vertex.NewVertexAIClient(vertex.ClientConfig{
+
+	switch clientType {
+	case clienttype.Openai:
+		openAIClient = oai.NewOpenAIClient(oai.ClientConfig{
+			APIKey:  config.APIKey,
+			BaseURL: config.BaseURL,
+		})
+	case clienttype.Vertex:
+		var err error
+		if vertexAIClient, err = vertex.NewVertexAIClient(vertex.ClientConfig{
 			ProjectID:       config.ProjectID,
 			Location:        config.Location,
 			CredentialsPath: config.CredentialsPath,
-		})
-		if err != nil {
+		}); err != nil {
 			return nil, err
 		}
-		vertexAIClient = vc
 	}
 
 	return &Client{
@@ -59,9 +62,12 @@ func (c *Client) SendMessage(ctx context.Context,
 	prompt params.Prompt,
 	settings params.Settings) (string, error) {
 
-	// if settings.ModelName.IsGemini() {
-	// 	return c.VertexAIClient.SendCompletionMessage(ctx, prompt, settings)
-	// }
+	switch c.ClientType {
+	case clienttype.Openai:
+		return c.OpenAIClient.SendCompletionMessage(ctx, prompt, settings)
+	case clienttype.Vertex:
+		return c.VertexAIClient.SendCompletionMessage(ctx, prompt, settings)
+	}
 
-	return c.OpenAIClient.SendCompletionMessage(ctx, prompt, settings)
+	return "", fmt.Errorf("client type not supported")
 }

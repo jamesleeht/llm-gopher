@@ -1,8 +1,8 @@
 package main
 
 import (
-	"llm-gopher/enums/modelname"
-	"llm-gopher/enums/presetname"
+	"llm-gopher/examples/main/enums/modelname"
+	"llm-gopher/examples/main/enums/presetname"
 	"llm-gopher/params"
 )
 
