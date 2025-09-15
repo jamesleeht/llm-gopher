@@ -2,7 +2,6 @@ package main
 
 import (
 	"llm-gopher/client"
-	"llm-gopher/enums/clienttype"
 	"llm-gopher/examples/basic/enums/modelname"
 	"log"
 )
@@ -11,7 +10,7 @@ func getClientMap(env appConfig) map[string][]*client.Client {
 	chatGPTClient, err := client.NewClient(client.ClientConfig{
 		BaseURL: "https://api.openai.com/v1",
 		APIKey:  env.apiKey,
-	}, clienttype.Openai)
+	}, client.ClientTypeOpenAI)
 	if err != nil {
 		log.Fatalf("failed to create chatgpt client: %v", err)
 	}
@@ -19,7 +18,7 @@ func getClientMap(env appConfig) map[string][]*client.Client {
 	novitaClient, err := client.NewClient(client.ClientConfig{
 		APIKey:  env.novitaKey,
 		BaseURL: "https://api.novita.ai/v3/openai",
-	}, clienttype.Openai)
+	}, client.ClientTypeOpenAI)
 	if err != nil {
 		log.Fatalf("failed to create novita client: %v", err)
 	}
@@ -28,7 +27,7 @@ func getClientMap(env appConfig) map[string][]*client.Client {
 		ProjectID:       env.vertexAIProjectID,
 		Location:        env.vertexAILocation,
 		CredentialsPath: env.vertexAICredentialsPath,
-	}, clienttype.Vertex)
+	}, client.ClientTypeVertex)
 	if err != nil {
 		log.Fatalf("failed to create vertex ai client: %v", err)
 	}

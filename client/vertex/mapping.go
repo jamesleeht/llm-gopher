@@ -2,7 +2,6 @@ package vertex
 
 import (
 	"fmt"
-	"llm-gopher/enums/messagerole"
 	"llm-gopher/params"
 	"reflect"
 
@@ -15,9 +14,9 @@ func mapPromptToMessages(prompt params.Prompt) []*genai.Content {
 	for _, message := range prompt.Messages {
 		var role genai.Role
 		switch message.Role {
-		case messagerole.Assistant:
+		case params.MessageRoleAssistant:
 			role = genai.RoleModel
-		case messagerole.User:
+		case params.MessageRoleUser:
 			role = genai.RoleUser
 		}
 		messages = append(messages, genai.NewContentFromText(message.Content, role))

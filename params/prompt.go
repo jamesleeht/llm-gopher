@@ -1,9 +1,7 @@
 package params
 
-import "llm-gopher/enums/messagerole"
-
 type Message struct {
-	Role    messagerole.MessageRole
+	Role    MessageRole
 	Content string
 }
 
@@ -31,7 +29,7 @@ func NewSimplePrompt(systemMessage string, userMessage string) Prompt {
 	return Prompt{
 		SystemMessage: systemMessage,
 		Messages: []Message{
-			{Role: messagerole.User, Content: userMessage},
+			{Role: MessageRoleUser, Content: userMessage},
 		},
 	}
 }
