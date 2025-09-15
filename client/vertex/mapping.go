@@ -2,6 +2,7 @@ package vertex
 
 import (
 	"fmt"
+	"llm-gopher/enums/messagerole"
 	"llm-gopher/params"
 	"reflect"
 
@@ -12,7 +13,14 @@ import (
 func mapPromptToMessages(prompt params.Prompt) []*genai.Content {
 	messages := []*genai.Content{}
 	for _, message := range prompt.Messages {
-		messages = append(messages, genai.NewContentFromText(message.Content, genai.RoleUser))
+		var role genai.Role
+		switch message.Role {
+		case messagerole.Assistant:
+			role = genai.RoleModel
+		case messagerole.User:
+			role = genai.RoleUser
+		}
+		messages = append(messages, genai.NewContentFromText(message.Content, role))
 	}
 	return messages
 }
@@ -77,7 +85,6 @@ func mapSettingsToVertexSettings(prompt params.Prompt, settings params.Settings)
 	var systemInstruction *genai.Content
 	if prompt.SystemMessage != "" {
 		systemInstruction = &genai.Content{Parts: []*genai.Part{{Text: prompt.SystemMessage}}}
-
 	}
 
 	return &genai.GenerateContentConfig{
