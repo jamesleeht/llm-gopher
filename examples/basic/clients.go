@@ -3,7 +3,7 @@ package main
 import (
 	"llm-gopher/client"
 	"llm-gopher/enums/clienttype"
-	"llm-gopher/examples/main/enums/modelname"
+	"llm-gopher/examples/basic/enums/modelname"
 	"log"
 )
 

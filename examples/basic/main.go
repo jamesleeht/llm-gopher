@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"llm-gopher/examples/main/enums/presetname"
+	"llm-gopher/examples/basic/enums/presetname"
 	"llm-gopher/params"
 	"llm-gopher/router"
 	"log"
