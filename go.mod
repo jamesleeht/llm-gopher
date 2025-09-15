@@ -1,4 +1,4 @@
-module llm-gopher
+module github.com/jamesleeht/llm-gopher
 
 go 1.25.0
 
