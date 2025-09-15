@@ -28,6 +28,7 @@ type ProviderClient interface {
 	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (string, error)
 }
 
+// TODO: make isVertexClient more general (an enum representing each client type)
 func NewClient(config ClientConfig, isVertexClient bool) (*Client, error) {
 	//nolint:exhaustruct
 	openAIClient := oai.NewOpenAIClient(oai.ClientConfig{
@@ -58,9 +59,9 @@ func (c *Client) SendMessage(ctx context.Context,
 	prompt params.Prompt,
 	settings params.Settings) (string, error) {
 
-	if settings.ModelName.IsGemini() {
-		return c.VertexAIClient.SendCompletionMessage(ctx, prompt, settings)
-	}
+	// if settings.ModelName.IsGemini() {
+	// 	return c.VertexAIClient.SendCompletionMessage(ctx, prompt, settings)
+	// }
 
 	return c.OpenAIClient.SendCompletionMessage(ctx, prompt, settings)
 }

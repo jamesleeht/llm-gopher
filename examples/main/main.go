@@ -14,10 +14,13 @@ func main() {
 
 	clientMap := getClientMap(env)
 	presetMap := getPresetSettingsMap()
-	router := router.NewRouter(clientMap, presetMap)
+	router, err := router.NewRouter(clientMap, presetMap)
+	if err != nil {
+		log.Fatalf("failed to create router: %v", err)
+	}
 
 	prompt := params.NewSimplePrompt("You are a helpful assistant.", "Hello, how are you?")
-	response, err := router.SendPrompt(context.Background(), presetname.DeepseekV3, prompt)
+	response, err := router.SendPrompt(context.Background(), presetname.DeepseekV3.String(), prompt)
 	if err != nil {
 		log.Fatalf("failed to send message: %v", err)
 	}

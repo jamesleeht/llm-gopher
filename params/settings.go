@@ -1,7 +1,5 @@
 package params
 
-import "llm-gopher/enums/modelname"
-
 type ThinkingBudget string
 
 const (
@@ -13,7 +11,7 @@ const (
 )
 
 type Settings struct {
-	ModelName       modelname.ModelName
+	ModelName       string
 	Temperature     *float64
 	ThinkingBudget  ThinkingBudget
 	IsSearchEnabled bool

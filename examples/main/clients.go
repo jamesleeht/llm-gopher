@@ -3,11 +3,10 @@ package main
 import (
 	"llm-gopher/client"
 	"llm-gopher/enums/modelname"
-	"llm-gopher/router"
 	"log"
 )
 
-func getClientMap(env appConfig) router.ClientMap {
+func getClientMap(env appConfig) map[string][]*client.Client {
 	chatGPTClient, err := client.NewClient(client.ClientConfig{
 		BaseURL: "https://api.openai.com/v1",
 		APIKey:  env.apiKey,
@@ -33,7 +32,7 @@ func getClientMap(env appConfig) router.ClientMap {
 		log.Fatalf("failed to create vertex ai client: %v", err)
 	}
 
-	clientMap := router.ClientMap{
+	clientMap := map[modelname.ModelName][]*client.Client{
 		modelname.DeepseekDeepseekV3Turbo: []*client.Client{novitaClient},
 		modelname.DeepseekDeepseekV31:     []*client.Client{novitaClient},
 		modelname.Gemini20Flash:           []*client.Client{vertexAIClient},
@@ -43,5 +42,9 @@ func getClientMap(env appConfig) router.ClientMap {
 		modelname.Gpt4OMiniSearchPreview:  []*client.Client{chatGPTClient},
 	}
 
-	return clientMap
+	result := make(map[string][]*client.Client)
+	for modelName, clients := range clientMap {
+		result[modelName.String()] = clients
+	}
+	return result
 }
