@@ -76,7 +76,8 @@ func mapSettingsToVertexSettings(prompt params.Prompt, settings params.Settings)
 
 	var systemInstruction *genai.Content
 	if prompt.SystemMessage != "" {
-		systemInstruction = genai.NewContentFromText(prompt.SystemMessage, genai.RoleUser)
+		systemInstruction = &genai.Content{Parts: []*genai.Part{{Text: prompt.SystemMessage}}}
+
 	}
 
 	return &genai.GenerateContentConfig{
