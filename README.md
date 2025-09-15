@@ -10,3 +10,15 @@ It is partially inspired by the (LiteLLM Python SDK)[https://github.com/BerriAI/
 
 - OpenAI
 - Vertex
+
+## Presets
+
+A preset represents a combination of the model and its settings.
+We use this internally since we have different use cases which might require a specific combination.
+
+## Router
+
+The router can be configured with a bunch of clients and presets.
+
+1. When you send a prompt to the router, you specify a preset.
+2. The preset's settings will be applied and an appropriate client will be selected for the model.

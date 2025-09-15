@@ -17,7 +17,7 @@ func main() {
 	router := router.NewRouter(clientMap, presetMap)
 
 	prompt := params.NewSimplePrompt("You are a helpful assistant.", "Hello, how are you?")
-	response, err := router.SendMessage(context.Background(), presetname.DeepseekV3, prompt)
+	response, err := router.SendPrompt(context.Background(), presetname.DeepseekV3, prompt)
 	if err != nil {
 		log.Fatalf("failed to send message: %v", err)
 	}

@@ -24,7 +24,7 @@ func NewRouter(clients ClientMap, presetMap PresetMap) *Router {
 	}
 }
 
-func (r *Router) SendMessage(ctx context.Context,
+func (r *Router) SendPrompt(ctx context.Context,
 	presetName presetname.PresetName,
 	prompt params.Prompt) (string, error) {
 	presetSettings, exists := r.presetMap[presetName]
