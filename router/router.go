@@ -3,8 +3,9 @@ package router
 import (
 	"context"
 	"fmt"
-	"llm-gopher/client"
-	"llm-gopher/params"
+
+	"github.com/jamesleeht/llm-gopher/client"
+	"github.com/jamesleeht/llm-gopher/params"
 )
 
 type Router struct {

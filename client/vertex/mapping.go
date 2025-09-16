@@ -2,8 +2,9 @@ package vertex
 
 import (
 	"fmt"
-	"llm-gopher/params"
 	"reflect"
+
+	"github.com/jamesleeht/llm-gopher/params"
 
 	"github.com/invopop/jsonschema"
 	"google.golang.org/genai"

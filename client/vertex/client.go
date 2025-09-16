@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"llm-gopher/params"
 	"os"
+
+	"github.com/jamesleeht/llm-gopher/params"
 
 	"cloud.google.com/go/auth"
 	"google.golang.org/genai"

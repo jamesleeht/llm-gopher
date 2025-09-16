@@ -1,9 +1,9 @@
 package main
 
 import (
-	"llm-gopher/examples/basic/enums/modelname"
-	"llm-gopher/examples/basic/enums/presetname"
-	"llm-gopher/params"
+	"github.com/jamesleeht/llm-gopher/examples/basic/enums/modelname"
+	"github.com/jamesleeht/llm-gopher/examples/basic/enums/presetname"
+	"github.com/jamesleeht/llm-gopher/params"
 )
 
 func getPresetSettingsMap() map[string]params.Settings {

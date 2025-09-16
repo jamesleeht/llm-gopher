@@ -1,9 +1,10 @@
 package main
 
 import (
-	"llm-gopher/client"
-	"llm-gopher/examples/basic/enums/modelname"
 	"log"
+
+	"github.com/jamesleeht/llm-gopher/client"
+	"github.com/jamesleeht/llm-gopher/examples/basic/enums/modelname"
 )
 
 func getClientMap(env appConfig) map[string][]*client.Client {

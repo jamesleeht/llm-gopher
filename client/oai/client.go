@@ -3,7 +3,8 @@ package oai
 import (
 	"context"
 	"fmt"
-	"llm-gopher/params"
+
+	"github.com/jamesleeht/llm-gopher/params"
 
 	"github.com/openai/openai-go/v2"
 	"github.com/openai/openai-go/v2/option"

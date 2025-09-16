@@ -1,8 +1,9 @@
 package oai
 
 import (
-	"llm-gopher/params"
 	"reflect"
+
+	"github.com/jamesleeht/llm-gopher/params"
 
 	"github.com/invopop/jsonschema"
 	"github.com/openai/openai-go/v2"

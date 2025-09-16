@@ -3,9 +3,10 @@ package client
 import (
 	"context"
 	"fmt"
-	"llm-gopher/client/oai"
-	"llm-gopher/client/vertex"
-	"llm-gopher/params"
+
+	"github.com/jamesleeht/llm-gopher/client/oai"
+	"github.com/jamesleeht/llm-gopher/client/vertex"
+	"github.com/jamesleeht/llm-gopher/params"
 )
 
 type Client struct {

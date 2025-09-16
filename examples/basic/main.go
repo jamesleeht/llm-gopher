@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"llm-gopher/examples/basic/enums/presetname"
-	"llm-gopher/params"
-	"llm-gopher/router"
 	"log"
+
+	"github.com/jamesleeht/llm-gopher/examples/basic/enums/presetname"
+	"github.com/jamesleeht/llm-gopher/params"
+	"github.com/jamesleeht/llm-gopher/router"
 )
 
 func main() {
