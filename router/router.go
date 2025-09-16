@@ -44,12 +44,6 @@ func validateAllModelsDefined(clientMap ClientMap, presetMap PresetMap) error {
 			return fmt.Errorf("model %s defined in preset map but not in client map", modelName)
 		}
 	}
-
-	for modelName := range modelsFromClientMap {
-		if !modelsFromPresetMap[modelName] {
-			return fmt.Errorf("model %s defined in client map but not in preset map", modelName)
-		}
-	}
 	return nil
 }
 
