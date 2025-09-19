@@ -35,8 +35,8 @@ func validateAllModelsDefined(clientMap ClientMap, presetMap PresetMap) error {
 	}
 
 	modelsFromPresetMap := make(map[string]bool)
-	for modelName := range presetMap {
-		modelsFromPresetMap[modelName] = true
+	for _, preset := range presetMap {
+		modelsFromPresetMap[preset.ModelName] = true
 	}
 
 	for modelName := range modelsFromPresetMap {
