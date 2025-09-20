@@ -55,6 +55,7 @@ func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
 	return &Client{
 		OpenAIClient:   openAIClient,
 		VertexAIClient: vertexAIClient,
+		ClientType:     clientType,
 	}, nil
 }
 
