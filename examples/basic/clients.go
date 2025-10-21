@@ -25,9 +25,9 @@ func getClientMap(env appConfig) map[string][]*client.Client {
 	}
 
 	vertexAIClient, err := client.NewClient(client.ClientConfig{
-		ProjectID:       env.vertexAIProjectID,
-		Location:        env.vertexAILocation,
-		CredentialsPath: env.vertexAICredentialsPath,
+		ProjectID:             env.vertexAIProjectID,
+		Location:              env.vertexAILocation,
+		VertexCredentialsPath: env.vertexAICredentialsPath,
 	}, client.ClientTypeVertex)
 	if err != nil {
 		log.Fatalf("failed to create vertex ai client: %v", err)

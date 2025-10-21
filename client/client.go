@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cloud.google.com/go/auth"
 	"github.com/jamesleeht/llm-gopher/client/oai"
 	"github.com/jamesleeht/llm-gopher/client/vertex"
 	"github.com/jamesleeht/llm-gopher/params"
@@ -21,10 +22,16 @@ type ClientConfig struct {
 	// OpenAI only
 	BaseURL string
 
-	// Vertex AI
-	ProjectID       string
-	Location        string
-	CredentialsPath string
+	// Vertex AI - Authentication options (in priority order):
+	// 1. VertexCredentials - Pre-configured credentials object
+	// 2. VertexCredentialsJSON - Service account JSON content as string
+	// 3. VertexCredentialsPath - Path to service account JSON file
+	// 4. If none provided, falls back to Application Default Credentials (ADC)
+	ProjectID             string
+	Location              string
+	VertexCredentials     interface{} // *auth.Credentials - using interface{} to avoid import
+	VertexCredentialsJSON string
+	VertexCredentialsPath string
 }
 
 type ProviderClient interface {
@@ -43,10 +50,19 @@ func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
 		})
 	case ClientTypeVertex:
 		var err error
+		// Convert interface{} back to *auth.Credentials if provided
+		var creds *auth.Credentials
+		if config.VertexCredentials != nil {
+			if c, ok := config.VertexCredentials.(*auth.Credentials); ok {
+				creds = c
+			}
+		}
 		if vertexAIClient, err = vertex.NewVertexAIClient(vertex.ClientConfig{
 			ProjectID:       config.ProjectID,
 			Location:        config.Location,
-			CredentialsPath: config.CredentialsPath,
+			Credentials:     creds,
+			CredentialsJSON: config.VertexCredentialsJSON,
+			CredentialsPath: config.VertexCredentialsPath,
 		}); err != nil {
 			return nil, err
 		}
