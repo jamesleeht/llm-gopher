@@ -14,7 +14,7 @@ func mapPromptToMessages(prompt params.Prompt) []openai.ChatCompletionMessagePar
 	messages := []openai.ChatCompletionMessageParamUnion{}
 	if prompt.SystemMessage != "" {
 		// Developer role has officially replaced System role
-		messages = append(messages, openai.DeveloperMessage(prompt.SystemMessage))
+		messages = append(messages, openai.SystemMessage(prompt.SystemMessage))
 	}
 
 	if prompt.Messages != nil {
