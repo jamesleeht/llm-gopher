@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	cloud.google.com/go/auth v0.16.5
 	github.com/openai/openai-go/v2 v2.4.2
-	google.golang.org/genai v1.24.0
+	google.golang.org/genai v1.32.0
 )
 
 require (

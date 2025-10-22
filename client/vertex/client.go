@@ -9,74 +9,28 @@ import (
 	"github.com/jamesleeht/llm-gopher/params"
 
 	"cloud.google.com/go/auth"
-	"cloud.google.com/go/auth/credentials"
 	"google.golang.org/genai"
 )
 
-// Client wraps the official Vertex AI SDK
 type Client struct {
 	internalClient *genai.Client
 }
 
-// ClientConfig holds the configuration for Vertex AI
-//
-// Authentication Methods (in priority order):
-//
-// 1. Pre-configured Credentials:
-//
-//	creds := ... // obtain credentials from somewhere
-//	config := ClientConfig{
-//		ProjectID:   "my-project",
-//		Location:    "us-central1",
-//		Credentials: creds,
-//	}
-//
-// 2. Service Account JSON (as string):
-//
-//	jsonContent := `{"type": "service_account", ...}`
-//	config := ClientConfig{
-//		ProjectID:       "my-project",
-//		Location:        "us-central1",
-//		CredentialsJSON: jsonContent,
-//	}
-//
-// 3. Service Account JSON File (path):
-//
-//	config := ClientConfig{
-//		ProjectID:       "my-project",
-//		Location:        "us-central1",
-//		CredentialsPath: "/path/to/service-account.json",
-//	}
-//
-// 4. Application Default Credentials (ADC) - automatic fallback:
-//
-//	config := ClientConfig{
-//		ProjectID: "my-project",
-//		Location:  "us-central1",
-//		// No auth fields - will use ADC automatically
-//		// ADC sources (in order):
-//		// - GOOGLE_APPLICATION_CREDENTIALS env var
-//		// - gcloud auth application-default credentials
-//		// - Compute Engine/GKE service account
-//	}
 type ClientConfig struct {
 	ProjectID string
 	Location  string
 
-	// Credentials is a pre-configured auth.Credentials object (priority 1)
-	Credentials *auth.Credentials
-	// CredentialsJSON is the service account JSON content as a string (priority 2)
-	CredentialsJSON string
-	// CredentialsPath is the path to a service account JSON file (priority 3)
-	CredentialsPath string
-	// If none of the above are provided, Application Default Credentials (ADC) will be used (priority 4)
+	// path to a service account JSON file or JSON string. Used in development.
+	CredentialsPath       string
+	CredentialsJSONString string
 }
 
 // NewVertexAIClient creates a new Vertex AI client using the official SDK
 func NewVertexAIClient(config ClientConfig) (*Client, error) {
 	ctx := context.Background()
 
-	// Determine which authentication method to use
+	// Determine which authentication method to use.
+	// If no path or json string is provided, creds is set to nil.
 	creds, err := getCredentials(config)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get credentials: %w", err)
@@ -96,28 +50,6 @@ func NewVertexAIClient(config ClientConfig) (*Client, error) {
 	return &Client{
 		internalClient: client,
 	}, nil
-}
-
-// getCredentials resolves credentials from the config in priority order
-func getCredentials(config ClientConfig) (*auth.Credentials, error) {
-	// Priority 1: Pre-configured credentials object
-	if config.Credentials != nil {
-		return config.Credentials, nil
-	}
-
-	// Priority 2: Direct JSON content
-	if config.CredentialsJSON != "" {
-		return parseCredentialsJSON([]byte(config.CredentialsJSON))
-	}
-
-	// Priority 3: Credentials file path
-	if config.CredentialsPath != "" {
-		return parseCredentialsFile(config.CredentialsPath)
-	}
-
-	// Priority 4: Application Default Credentials (ADC)
-	// This will use GOOGLE_APPLICATION_CREDENTIALS env var or gcloud auth
-	return getApplicationDefaultCredentials()
 }
 
 func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (string, error) {
@@ -151,8 +83,17 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 	return resp.Text(), nil
 }
 
-// parseCredentialsFile reads and parses a service account JSON file
-func parseCredentialsFile(credentialsPath string) (*auth.Credentials, error) {
+func getCredentials(config ClientConfig) (*auth.Credentials, error) {
+	if config.CredentialsPath != "" {
+		return getCredsFromCredentialsPath(config.CredentialsPath)
+	}
+	if config.CredentialsJSONString != "" {
+		return parseCredentialsJSON([]byte(config.CredentialsJSONString))
+	}
+	return nil, nil
+}
+
+func getCredsFromCredentialsPath(credentialsPath string) (*auth.Credentials, error) {
 	credJSON, err := os.ReadFile(credentialsPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read credentials file: %w", err)
@@ -191,20 +132,5 @@ func parseCredentialsJSON(credJSON []byte) (*auth.Credentials, error) {
 		JSON:          credJSON,
 	})
 
-	return creds, nil
-}
-
-// getApplicationDefaultCredentials uses Application Default Credentials (ADC)
-// This will automatically use:
-// 1. GOOGLE_APPLICATION_CREDENTIALS environment variable
-// 2. gcloud auth application-default credentials
-// 3. Compute Engine/GKE service account when running on GCP
-func getApplicationDefaultCredentials() (*auth.Credentials, error) {
-	creds, err := credentials.DetectDefault(&credentials.DetectOptions{
-		Scopes: []string{"https://www.googleapis.com/auth/cloud-platform"},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to detect default credentials: %w", err)
-	}
 	return creds, nil
 }
