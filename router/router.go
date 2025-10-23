@@ -49,20 +49,20 @@ func validateAllModelsDefined(clientMap ClientMap, presetMap PresetMap) error {
 
 func (r *Router) SendPrompt(ctx context.Context,
 	presetName string,
-	prompt params.Prompt) (string, error) {
+	prompt params.Prompt) (interface{}, error) {
 	preset, exists := r.presetMap[presetName]
 	if !exists {
-		return "", fmt.Errorf("preset %s not found", presetName)
+		return nil, fmt.Errorf("preset %s not found", presetName)
 	}
 
 	client, err := r.GetClientForModelName(preset.ModelName)
 	if err != nil {
-		return "", fmt.Errorf("failed to get client for model %s: %w", preset.ModelName, err)
+		return nil, fmt.Errorf("failed to get client for model %s: %w", preset.ModelName, err)
 	}
 
 	response, err := client.SendMessage(ctx, prompt, preset)
 	if err != nil {
-		return "", fmt.Errorf("failed to send message: %w", err)
+		return nil, fmt.Errorf("failed to send message: %w", err)
 	}
 
 	return response, nil

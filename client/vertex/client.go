@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/jamesleeht/llm-gopher/params"
 
@@ -52,10 +53,10 @@ func NewVertexAIClient(config ClientConfig) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (string, error) {
+func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error) {
 	config, err := mapSettingsToVertexSettings(prompt, settings)
 	if err != nil {
-		return "", fmt.Errorf("failed to map settings to vertex settings: %w", err)
+		return nil, fmt.Errorf("failed to map settings to vertex settings: %w", err)
 	}
 
 	messages := mapPromptToMessages(prompt)
@@ -65,7 +66,7 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 		config,
 	)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate content: %w", err)
+		return nil, fmt.Errorf("failed to generate content: %w", err)
 	}
 
 	// candidate := resp.Candidates[0]
@@ -80,7 +81,25 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 	// 	}
 	// }
 
-	return resp.Text(), nil
+	content := resp.Text()
+
+	// If response format is specified, unmarshal into that type
+	if prompt.ResponseFormat != nil {
+		// Create a new instance of the response format type
+		responseType := reflect.TypeOf(prompt.ResponseFormat)
+		responseValue := reflect.New(responseType).Interface()
+
+		// Unmarshal the JSON content into the response format
+		if err := json.Unmarshal([]byte(content), responseValue); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response into specified format: %w", err)
+		}
+
+		// Return the dereferenced value (not the pointer)
+		return reflect.ValueOf(responseValue).Elem().Interface(), nil
+	}
+
+	// If no response format specified, return the raw string content
+	return content, nil
 }
 
 func getCredentials(config ClientConfig) (*auth.Credentials, error) {

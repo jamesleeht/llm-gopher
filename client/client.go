@@ -29,7 +29,7 @@ type ClientConfig struct {
 }
 
 type ProviderClient interface {
-	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (string, error)
+	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error)
 }
 
 func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
@@ -63,7 +63,7 @@ func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
 
 func (c *Client) SendMessage(ctx context.Context,
 	prompt params.Prompt,
-	settings params.Settings) (string, error) {
+	settings params.Settings) (interface{}, error) {
 
 	switch c.ClientType {
 	case ClientTypeOpenAI:
@@ -72,5 +72,5 @@ func (c *Client) SendMessage(ctx context.Context,
 		return c.VertexAIClient.SendCompletionMessage(ctx, prompt, settings)
 	}
 
-	return "", fmt.Errorf("client type not supported")
+	return nil, fmt.Errorf("client type not supported")
 }

@@ -2,7 +2,9 @@ package oai
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/jamesleeht/llm-gopher/params"
 
@@ -32,7 +34,7 @@ func NewOpenAIClient(config ClientConfig) *Client {
 	}
 }
 
-func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (string, error) {
+func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error) {
 	params := mapSettingsToParams(settings)
 	messages := mapPromptToMessages(prompt)
 	params.Messages = messages
@@ -44,8 +46,26 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 	completion, err := c.internalClient.Chat.Completions.New(ctx, params)
 
 	if err != nil {
-		return "", fmt.Errorf("failed to send completion message: %w", err)
+		return nil, fmt.Errorf("failed to send completion message: %w", err)
 	}
 
-	return completion.Choices[0].Message.Content, nil
+	content := completion.Choices[0].Message.Content
+
+	// If response format is specified, unmarshal into that type
+	if prompt.ResponseFormat != nil {
+		// Create a new instance of the response format type
+		responseType := reflect.TypeOf(prompt.ResponseFormat)
+		responseValue := reflect.New(responseType).Interface()
+
+		// Unmarshal the JSON content into the response format
+		if err := json.Unmarshal([]byte(content), responseValue); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response into specified format: %w", err)
+		}
+
+		// Return the dereferenced value (not the pointer)
+		return reflect.ValueOf(responseValue).Elem().Interface(), nil
+	}
+
+	// If no response format specified, return the raw string content
+	return content, nil
 }
