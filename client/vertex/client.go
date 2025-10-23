@@ -53,7 +53,7 @@ func NewVertexAIClient(config ClientConfig) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error) {
+func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (*params.Response, error) {
 	config, err := mapSettingsToVertexSettings(prompt, settings)
 	if err != nil {
 		return nil, fmt.Errorf("failed to map settings to vertex settings: %w", err)
@@ -83,6 +83,11 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 
 	content := resp.Text()
 
+	response := &params.Response{
+		Content: content,
+		Parsed:  nil,
+	}
+
 	// If response format is specified, unmarshal into that type
 	if prompt.ResponseFormat != nil {
 		// ResponseFormat must be a pointer to unmarshal into
@@ -97,12 +102,11 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 			return nil, fmt.Errorf("failed to unmarshal response into specified format: %w", err)
 		}
 
-		// Return the populated pointer
-		return prompt.ResponseFormat, nil
+		// Set the parsed field to the populated pointer
+		response.Parsed = prompt.ResponseFormat
 	}
 
-	// If no response format specified, return the raw string content
-	return content, nil
+	return response, nil
 }
 
 func getCredentials(config ClientConfig) (*auth.Credentials, error) {

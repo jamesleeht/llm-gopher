@@ -34,22 +34,27 @@ func NewOpenAIClient(config ClientConfig) *Client {
 	}
 }
 
-func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error) {
-	params := mapSettingsToParams(settings)
+func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (*params.Response, error) {
+	chatParams := mapSettingsToParams(settings)
 	messages := mapPromptToMessages(prompt)
-	params.Messages = messages
+	chatParams.Messages = messages
 
 	if rf := mapPromptToResponseFormat(prompt); rf != nil {
-		params.ResponseFormat = *rf
+		chatParams.ResponseFormat = *rf
 	}
 
-	completion, err := c.internalClient.Chat.Completions.New(ctx, params)
+	completion, err := c.internalClient.Chat.Completions.New(ctx, chatParams)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to send completion message: %w", err)
 	}
 
 	content := completion.Choices[0].Message.Content
+
+	response := &params.Response{
+		Content: content,
+		Parsed:  nil,
+	}
 
 	// If response format is specified, unmarshal into that type
 	if prompt.ResponseFormat != nil {
@@ -65,10 +70,9 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 			return nil, fmt.Errorf("failed to unmarshal response into specified format: %w", err)
 		}
 
-		// Return the populated pointer
-		return prompt.ResponseFormat, nil
+		// Set the parsed field to the populated pointer
+		response.Parsed = prompt.ResponseFormat
 	}
 
-	// If no response format specified, return the raw string content
-	return content, nil
+	return response, nil
 }

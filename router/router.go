@@ -49,7 +49,7 @@ func validateAllModelsDefined(clientMap ClientMap, presetMap PresetMap) error {
 
 func (r *Router) SendPrompt(ctx context.Context,
 	presetName string,
-	prompt params.Prompt) (interface{}, error) {
+	prompt params.Prompt) (*params.Response, error) {
 	preset, exists := r.presetMap[presetName]
 	if !exists {
 		return nil, fmt.Errorf("preset %s not found", presetName)

@@ -26,5 +26,5 @@ func main() {
 		log.Fatalf("failed to send message: %v", err)
 	}
 
-	fmt.Println(response.(string))
+	fmt.Println(response.Content)
 }

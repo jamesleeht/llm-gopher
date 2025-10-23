@@ -29,7 +29,7 @@ type ClientConfig struct {
 }
 
 type ProviderClient interface {
-	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error)
+	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (*params.Response, error)
 }
 
 func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
@@ -63,7 +63,7 @@ func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
 
 func (c *Client) SendMessage(ctx context.Context,
 	prompt params.Prompt,
-	settings params.Settings) (interface{}, error) {
+	settings params.Settings) (*params.Response, error) {
 
 	switch c.ClientType {
 	case ClientTypeOpenAI:
