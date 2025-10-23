@@ -10,7 +10,7 @@ import (
 	"google.golang.org/genai"
 )
 
-func mapPromptToMessages(prompt params.Prompt) []*genai.Content {
+func mapPromptToMessages[T any](prompt params.Prompt[T]) []*genai.Content {
 	messages := []*genai.Content{}
 	for _, message := range prompt.Messages {
 		var role genai.Role
@@ -25,8 +25,9 @@ func mapPromptToMessages(prompt params.Prompt) []*genai.Content {
 	return messages
 }
 
-func mapSettingsToVertexSettings(prompt params.Prompt, settings params.Settings) (*genai.GenerateContentConfig, error) {
-	if settings.IsSearchEnabled && prompt.ResponseFormat != nil {
+func mapSettingsToVertexSettings[T any](prompt params.Prompt[T], settings params.Settings) (*genai.GenerateContentConfig, error) {
+	hasStructured := hasStructuredOutput[T]()
+	if settings.IsSearchEnabled && hasStructured {
 		return nil, fmt.Errorf("gemini - response format is not supported when search is enabled")
 	}
 
@@ -61,7 +62,7 @@ func mapSettingsToVertexSettings(prompt params.Prompt, settings params.Settings)
 		}
 	}
 
-	respFormat := mapResponseFormatToVertexResponseFormat(prompt)
+	respFormat := mapResponseFormatToVertexResponseFormat[T]()
 	respMimeType := ""
 	if respFormat != nil {
 		respMimeType = "application/json"
@@ -98,13 +99,24 @@ func mapSettingsToVertexSettings(prompt params.Prompt, settings params.Settings)
 	}, nil
 }
 
-func mapResponseFormatToVertexResponseFormat(prompt params.Prompt) any {
-	// Return nil if no response format is specified
-	if prompt.ResponseFormat == nil {
+func mapResponseFormatToVertexResponseFormat[T any]() any {
+	// Get the type of T
+	var zero T
+	t := reflect.TypeOf(zero)
+
+	// If T is interface{} (any) or nil, don't use structured output
+	if t == nil || t.Kind() == reflect.Interface {
 		return nil
 	}
+
 	// Create a zero value of the type and generate schema
-	return generateSchemaFromType(reflect.TypeOf(prompt.ResponseFormat))
+	return generateSchemaFromType(t)
+}
+
+func hasStructuredOutput[T any]() bool {
+	var zero T
+	t := reflect.TypeOf(zero)
+	return t != nil && t.Kind() != reflect.Interface
 }
 
 func generateSchemaFromType(t reflect.Type) interface{} {

@@ -10,7 +10,7 @@ import (
 	"github.com/openai/openai-go/v2/shared"
 )
 
-func mapPromptToMessages(prompt params.Prompt) []openai.ChatCompletionMessageParamUnion {
+func mapPromptToMessages[T any](prompt params.Prompt[T]) []openai.ChatCompletionMessageParamUnion {
 	messages := []openai.ChatCompletionMessageParamUnion{}
 	if prompt.SystemMessage != "" {
 		messages = append(messages, openai.SystemMessage(prompt.SystemMessage))
@@ -24,21 +24,22 @@ func mapPromptToMessages(prompt params.Prompt) []openai.ChatCompletionMessagePar
 	return messages
 }
 
-func mapPromptToResponseFormat(prompt params.Prompt) *openai.ChatCompletionNewParamsResponseFormatUnion {
-	if prompt.ResponseFormat == nil {
+func mapPromptToResponseFormat[T any]() *openai.ChatCompletionNewParamsResponseFormatUnion {
+	// Get the type of T
+	var zero T
+	t := reflect.TypeOf(zero)
+
+	// If T is interface{} (any) or nil, don't use structured output
+	if t == nil || t.Kind() == reflect.Interface {
 		return nil
 	}
 
 	// Get the type name from the struct
-	t := reflect.TypeOf(prompt.ResponseFormat)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-	}
 	schemaName := t.Name()
 
 	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
 		Name:   schemaName,
-		Schema: generateSchemaFromType(reflect.TypeOf(prompt.ResponseFormat)),
+		Schema: generateSchemaFromType(t),
 		Strict: openai.Bool(true),
 	}
 

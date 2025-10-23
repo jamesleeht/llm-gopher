@@ -10,8 +10,8 @@ import (
 )
 
 type Client struct {
-	OpenAIClient   ProviderClient
-	VertexAIClient ProviderClient
+	OpenAIClient   *oai.Client
+	VertexAIClient *vertex.Client
 	ClientType     ClientType
 }
 
@@ -26,10 +26,6 @@ type ClientConfig struct {
 	Location              string
 	VertexCredentialsJSON string
 	VertexCredentialsPath string
-}
-
-type ProviderClient interface {
-	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error)
 }
 
 func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
@@ -61,16 +57,34 @@ func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) SendMessage(ctx context.Context,
-	prompt params.Prompt,
-	settings params.Settings) (interface{}, error) {
+// SendMessage is a generic function that sends a message and returns a typed response.
+// Use T to specify the expected response type:
+//   - SendMessage[any](...) for unstructured text responses
+//   - SendMessage[YourStruct](...) for structured JSON responses
+func SendMessage[T any](ctx context.Context,
+	client *Client,
+	prompt params.Prompt[T],
+	settings params.Settings) (*Response[T], error) {
 
-	switch c.ClientType {
+	var content string
+	var parsed *T
+	var err error
+
+	switch client.ClientType {
 	case ClientTypeOpenAI:
-		return c.OpenAIClient.SendCompletionMessage(ctx, prompt, settings)
+		content, parsed, err = oai.SendCompletionMessage[T](ctx, client.OpenAIClient, prompt, settings)
 	case ClientTypeVertex:
-		return c.VertexAIClient.SendCompletionMessage(ctx, prompt, settings)
+		content, parsed, err = vertex.SendCompletionMessage[T](ctx, client.VertexAIClient, prompt, settings)
+	default:
+		return nil, fmt.Errorf("client type not supported")
 	}
 
-	return nil, fmt.Errorf("client type not supported")
+	if err != nil {
+		return nil, err
+	}
+
+	return &Response[T]{
+		Content: content,
+		Parsed:  parsed,
+	}, nil
 }
