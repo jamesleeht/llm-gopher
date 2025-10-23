@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/jamesleeht/llm-gopher/params"
 
@@ -52,11 +53,10 @@ func NewVertexAIClient(config ClientConfig) (*Client, error) {
 	}, nil
 }
 
-// SendCompletionMessage is a generic function that sends a completion request and returns a typed response.
-func SendCompletionMessage[T any](ctx context.Context, c *Client, prompt params.Prompt[T], settings params.Settings) (string, *T, error) {
-	config, err := mapSettingsToVertexSettings[T](prompt, settings)
+func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (interface{}, error) {
+	config, err := mapSettingsToVertexSettings(prompt, settings)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to map settings to vertex settings: %w", err)
+		return nil, fmt.Errorf("failed to map settings to vertex settings: %w", err)
 	}
 
 	messages := mapPromptToMessages(prompt)
@@ -66,7 +66,7 @@ func SendCompletionMessage[T any](ctx context.Context, c *Client, prompt params.
 		config,
 	)
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to generate content: %w", err)
+		return nil, fmt.Errorf("failed to generate content: %w", err)
 	}
 
 	// candidate := resp.Candidates[0]
@@ -83,21 +83,26 @@ func SendCompletionMessage[T any](ctx context.Context, c *Client, prompt params.
 
 	content := resp.Text()
 
-	// Check if T is not 'any' by attempting to unmarshal
-	// If T is a concrete type, unmarshal the response
-	var parsed T
-	var parsedPtr *T
-	if err := json.Unmarshal([]byte(content), &parsed); err == nil {
-		// Only set Parsed if T is not 'any'
-		parsedPtr = &parsed
-	} else {
-		// If we expected a structured response but unmarshaling failed, return error
-		if hasStructuredOutput[T]() {
-			return "", nil, fmt.Errorf("failed to unmarshal response into specified format: %w", err)
+	// If response format is specified, unmarshal into that type
+	if prompt.ResponseFormat != nil {
+		// ResponseFormat must be a pointer to unmarshal into
+		responseType := reflect.TypeOf(prompt.ResponseFormat)
+
+		if responseType.Kind() != reflect.Ptr {
+			return nil, fmt.Errorf("response format must be a pointer, got %v", responseType.Kind())
 		}
+
+		// Unmarshal directly into the pointer provided by the user
+		if err := json.Unmarshal([]byte(content), prompt.ResponseFormat); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal response into specified format: %w", err)
+		}
+
+		// Return the populated pointer
+		return prompt.ResponseFormat, nil
 	}
 
-	return content, parsedPtr, nil
+	// If no response format specified, return the raw string content
+	return content, nil
 }
 
 func getCredentials(config ClientConfig) (*auth.Credentials, error) {

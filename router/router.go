@@ -47,47 +47,20 @@ func validateAllModelsDefined(clientMap ClientMap, presetMap PresetMap) error {
 	return nil
 }
 
-// SendPrompt sends a prompt using the specified preset and returns a response.
-// For unstructured text responses, use SendPrompt with Prompt[any].
-// For structured JSON responses, use SendPromptTyped[T] instead.
 func (r *Router) SendPrompt(ctx context.Context,
 	presetName string,
-	prompt params.Prompt[any]) (*client.Response[any], error) {
+	prompt params.Prompt) (interface{}, error) {
 	preset, exists := r.presetMap[presetName]
 	if !exists {
 		return nil, fmt.Errorf("preset %s not found", presetName)
 	}
 
-	c, err := r.GetClientForModelName(preset.ModelName)
+	client, err := r.GetClientForModelName(preset.ModelName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get client for model %s: %w", preset.ModelName, err)
 	}
 
-	response, err := client.SendMessage[any](ctx, c, prompt, preset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to send message: %w", err)
-	}
-
-	return response, nil
-}
-
-// SendPromptTyped sends a prompt using the specified preset and returns a typed response.
-// Use this when you want structured JSON output.
-func SendPromptTyped[T any](ctx context.Context,
-	r *Router,
-	presetName string,
-	prompt params.Prompt[T]) (*client.Response[T], error) {
-	preset, exists := r.presetMap[presetName]
-	if !exists {
-		return nil, fmt.Errorf("preset %s not found", presetName)
-	}
-
-	c, err := r.GetClientForModelName(preset.ModelName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get client for model %s: %w", preset.ModelName, err)
-	}
-
-	response, err := client.SendMessage[T](ctx, c, prompt, preset)
+	response, err := client.SendMessage(ctx, prompt, preset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send message: %w", err)
 	}
