@@ -85,17 +85,20 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 
 	// If response format is specified, unmarshal into that type
 	if prompt.ResponseFormat != nil {
-		// Create a new instance of the response format type
+		// ResponseFormat must be a pointer to unmarshal into
 		responseType := reflect.TypeOf(prompt.ResponseFormat)
-		responseValue := reflect.New(responseType).Interface()
 
-		// Unmarshal the JSON content into the response format
-		if err := json.Unmarshal([]byte(content), responseValue); err != nil {
+		if responseType.Kind() != reflect.Ptr {
+			return nil, fmt.Errorf("response format must be a pointer, got %v", responseType.Kind())
+		}
+
+		// Unmarshal directly into the pointer provided by the user
+		if err := json.Unmarshal([]byte(content), prompt.ResponseFormat); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal response into specified format: %w", err)
 		}
 
-		// Return the dereferenced value (not the pointer)
-		return reflect.ValueOf(responseValue).Elem().Interface(), nil
+		// Return the populated pointer
+		return prompt.ResponseFormat, nil
 	}
 
 	// If no response format specified, return the raw string content

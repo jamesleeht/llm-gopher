@@ -26,7 +26,7 @@ func mapPromptToMessages(prompt params.Prompt) []*genai.Content {
 }
 
 func mapSettingsToVertexSettings(prompt params.Prompt, settings params.Settings) (*genai.GenerateContentConfig, error) {
-	if settings.IsSearchEnabled && prompt.ResponseFormatName != "" {
+	if settings.IsSearchEnabled && prompt.ResponseFormat != nil {
 		return nil, fmt.Errorf("gemini - response format is not supported when search is enabled")
 	}
 
@@ -100,7 +100,7 @@ func mapSettingsToVertexSettings(prompt params.Prompt, settings params.Settings)
 
 func mapResponseFormatToVertexResponseFormat(prompt params.Prompt) any {
 	// Return nil if no response format is specified
-	if prompt.ResponseFormatName == "" || prompt.ResponseFormat == nil {
+	if prompt.ResponseFormat == nil {
 		return nil
 	}
 	// Create a zero value of the type and generate schema
@@ -113,6 +113,11 @@ func generateSchemaFromType(t reflect.Type) interface{} {
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
+	}
+
+	// If it's a pointer type, get the element type
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
 	}
 
 	// Create a zero value of the type

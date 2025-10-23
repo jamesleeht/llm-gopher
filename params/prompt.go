@@ -6,22 +6,19 @@ type Message struct {
 }
 
 type Prompt struct {
-	SystemMessage      string
-	Messages           []Message
-	ResponseFormatName string
-	ResponseFormat     interface{} // JSON schema for response format
+	SystemMessage  string
+	Messages       []Message
+	ResponseFormat interface{} // Pointer to struct for JSON schema response format. It cannot be a nil pointer, or it will be ignored.
 }
 
 func NewPrompt(
 	systemMessage string,
 	messages []Message,
-	responseFormatName string,
 	responseFormat interface{}) Prompt {
 	return Prompt{
-		SystemMessage:      systemMessage,
-		Messages:           messages,
-		ResponseFormatName: responseFormatName,
-		ResponseFormat:     responseFormat,
+		SystemMessage:  systemMessage,
+		Messages:       messages,
+		ResponseFormat: responseFormat,
 	}
 }
 

@@ -25,12 +25,19 @@ func mapPromptToMessages(prompt params.Prompt) []openai.ChatCompletionMessagePar
 }
 
 func mapPromptToResponseFormat(prompt params.Prompt) *openai.ChatCompletionNewParamsResponseFormatUnion {
-	if prompt.ResponseFormatName == "" || prompt.ResponseFormat == nil {
+	if prompt.ResponseFormat == nil {
 		return nil
 	}
 
+	// Get the type name from the struct
+	t := reflect.TypeOf(prompt.ResponseFormat)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	schemaName := t.Name()
+
 	schemaParam := openai.ResponseFormatJSONSchemaJSONSchemaParam{
-		Name:   prompt.ResponseFormatName,
+		Name:   schemaName,
 		Schema: generateSchemaFromType(reflect.TypeOf(prompt.ResponseFormat)),
 		Strict: openai.Bool(true),
 	}
@@ -48,6 +55,11 @@ func generateSchemaFromType(t reflect.Type) interface{} {
 	reflector := jsonschema.Reflector{
 		AllowAdditionalProperties: false,
 		DoNotReference:            true,
+	}
+
+	// If it's a pointer type, get the element type
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
 	}
 
 	// Create a zero value of the type
