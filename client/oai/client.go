@@ -76,3 +76,56 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 
 	return response, nil
 }
+
+func (c *Client) StreamCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (<-chan params.StreamChunk, error) {
+	chatParams := mapSettingsToParams(settings)
+	messages := mapPromptToMessages(prompt)
+	chatParams.Messages = messages
+
+	// Note: Response format (structured outputs) are not supported in streaming mode for OpenAI
+	// We ignore the response format if specified
+	if prompt.ResponseFormat != nil {
+		fmt.Println("Warning: Response format is not supported in streaming mode and will be ignored")
+	}
+
+	stream := c.internalClient.Chat.Completions.NewStreaming(ctx, chatParams)
+
+	chunks := make(chan params.StreamChunk)
+
+	go func() {
+		defer close(chunks)
+
+		acc := stream.Next()
+		for acc {
+			chunk := stream.Current()
+
+			if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
+				chunks <- params.StreamChunk{
+					Content: chunk.Choices[0].Delta.Content,
+					Done:    false,
+					Error:   nil,
+				}
+			}
+
+			acc = stream.Next()
+		}
+
+		if err := stream.Err(); err != nil {
+			chunks <- params.StreamChunk{
+				Content: "",
+				Done:    true,
+				Error:   fmt.Errorf("streaming error: %w", err),
+			}
+			return
+		}
+
+		// Send final chunk to indicate completion
+		chunks <- params.StreamChunk{
+			Content: "",
+			Done:    true,
+			Error:   nil,
+		}
+	}()
+
+	return chunks, nil
+}

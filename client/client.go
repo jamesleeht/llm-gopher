@@ -30,6 +30,7 @@ type ClientConfig struct {
 
 type ProviderClient interface {
 	SendCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (*params.Response, error)
+	StreamCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (<-chan params.StreamChunk, error)
 }
 
 func NewClient(config ClientConfig, clientType ClientType) (*Client, error) {
@@ -70,6 +71,20 @@ func (c *Client) SendMessage(ctx context.Context,
 		return c.OpenAIClient.SendCompletionMessage(ctx, prompt, settings)
 	case ClientTypeVertex:
 		return c.VertexAIClient.SendCompletionMessage(ctx, prompt, settings)
+	}
+
+	return nil, fmt.Errorf("client type not supported")
+}
+
+func (c *Client) StreamMessage(ctx context.Context,
+	prompt params.Prompt,
+	settings params.Settings) (<-chan params.StreamChunk, error) {
+
+	switch c.ClientType {
+	case ClientTypeOpenAI:
+		return c.OpenAIClient.StreamCompletionMessage(ctx, prompt, settings)
+	case ClientTypeVertex:
+		return c.VertexAIClient.StreamCompletionMessage(ctx, prompt, settings)
 	}
 
 	return nil, fmt.Errorf("client type not supported")

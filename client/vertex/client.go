@@ -109,6 +109,63 @@ func (c *Client) SendCompletionMessage(ctx context.Context, prompt params.Prompt
 	return response, nil
 }
 
+func (c *Client) StreamCompletionMessage(ctx context.Context, prompt params.Prompt, settings params.Settings) (<-chan params.StreamChunk, error) {
+	config, err := mapSettingsToVertexSettings(prompt, settings)
+	if err != nil {
+		return nil, fmt.Errorf("failed to map settings to vertex settings: %w", err)
+	}
+
+	// Note: Response format (structured outputs) may have limitations in streaming mode for Vertex
+	// We'll still attempt to stream, but the formatting may not work as expected
+	if prompt.ResponseFormat != nil {
+		fmt.Println("Warning: Response format may not be fully supported in streaming mode")
+	}
+
+	messages := mapPromptToMessages(prompt)
+	stream := c.internalClient.Models.GenerateContentStream(ctx,
+		string(settings.ModelName),
+		messages,
+		config,
+	)
+
+	chunks := make(chan params.StreamChunk)
+
+	go func() {
+		defer close(chunks)
+
+		// Use the iterator with a range loop (Go 1.23 iter.Seq2)
+		for resp, err := range stream {
+			if err != nil {
+				// Send error chunk
+				chunks <- params.StreamChunk{
+					Content: "",
+					Done:    true,
+					Error:   fmt.Errorf("streaming error: %w", err),
+				}
+				return
+			}
+
+			// Extract text from the response
+			if text := resp.Text(); text != "" {
+				chunks <- params.StreamChunk{
+					Content: text,
+					Done:    false,
+					Error:   nil,
+				}
+			}
+		}
+
+		// Send final chunk to indicate completion
+		chunks <- params.StreamChunk{
+			Content: "",
+			Done:    true,
+			Error:   nil,
+		}
+	}()
+
+	return chunks, nil
+}
+
 func getCredentials(config ClientConfig) (*auth.Credentials, error) {
 	if config.CredentialsPath != "" {
 		return getCredsFromCredentialsPath(config.CredentialsPath)

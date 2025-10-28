@@ -70,6 +70,53 @@ client, err := client.NewClient(client.ClientConfig{
 
 See `examples/basic/auth_examples.go` for more detailed examples.
 
+## Streaming Responses
+
+The library supports streaming responses from both OpenAI and Vertex AI providers. Streaming allows you to receive the response incrementally as it's being generated, rather than waiting for the complete response.
+
+### Basic Usage
+
+```go
+ctx := context.Background()
+chunks, err := client.StreamMessage(ctx, prompt, settings)
+if err != nil {
+    log.Fatal(err)
+}
+
+// Process chunks as they arrive
+for chunk := range chunks {
+    if chunk.Error != nil {
+        log.Printf("Error: %v\n", chunk.Error)
+        break
+    }
+
+    if chunk.Done {
+        fmt.Println("Stream complete!")
+        break
+    }
+
+    // Print content without newline to show streaming effect
+    fmt.Print(chunk.Content)
+}
+```
+
+### Stream Chunk Structure
+
+Each `StreamChunk` contains:
+
+- `Content` (string): The incremental text content in this chunk
+- `Done` (bool): Indicates if this is the final chunk in the stream
+- `Error` (error): Contains any error that occurred during streaming
+
+### Example
+
+See `examples/streaming/main.go` for a complete working example with both OpenAI and Vertex AI.
+
+### Limitations
+
+- **OpenAI**: Response format (structured outputs) is not supported in streaming mode
+- **Vertex AI**: Response format may have limitations in streaming mode
+
 ## Presets
 
 A preset represents a combination of the model and its settings.
