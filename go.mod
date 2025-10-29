@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	cloud.google.com/go/auth v0.16.5
-	github.com/openai/openai-go/v2 v2.4.2
+	github.com/openai/openai-go/v3 v3.7.0
 	google.golang.org/genai v1.32.0
 )
 
@@ -38,7 +38,7 @@ require (
 require (
 	github.com/invopop/jsonschema v0.13.0
 	github.com/tidwall/gjson v1.18.0 // indirect
-	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/match v1.2.0 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
 	golang.org/x/crypto v0.41.0 // indirect

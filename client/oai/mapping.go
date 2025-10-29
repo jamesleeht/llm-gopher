@@ -6,8 +6,8 @@ import (
 	"github.com/jamesleeht/llm-gopher/params"
 
 	"github.com/invopop/jsonschema"
-	"github.com/openai/openai-go/v2"
-	"github.com/openai/openai-go/v2/shared"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/shared"
 )
 
 func mapPromptToMessages(prompt params.Prompt) []openai.ChatCompletionMessageParamUnion {

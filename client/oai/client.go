@@ -8,8 +8,8 @@ import (
 
 	"github.com/jamesleeht/llm-gopher/params"
 
-	"github.com/openai/openai-go/v2"
-	"github.com/openai/openai-go/v2/option"
+	"github.com/openai/openai-go/v3"
+	"github.com/openai/openai-go/v3/option"
 )
 
 type ClientConfig struct {
